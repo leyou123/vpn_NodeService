@@ -22,17 +22,20 @@ class Servers(object):
         self.headers = {'Authorization': f'Bearer {settings.VULTR_API_KEY}'}
         self.ip = HOST.get_ip()
         self.upload_node_url = f"{settings.NODE_SERVER_URL}/node_status"
+        # self.upload_node_url = f"http://54.177.55.54:7000/node_status"
 
     def status(self):
         """
             获取服务器状态
         :return:
         """
-        instace_data = self.get_instance_list(self.address)
+        instace_data = self.get_instance_list(self.address) or {}
         instace_id = instace_data.get("instace_id", "")
         total_flow = instace_data.get("total_flow", "")
 
-        already_flow = self.get_instance_bandwidth(instace_id)
+        already_flow = 0
+        if instace_id:
+            already_flow = self.get_instance_bandwidth(instace_id)
 
         cpu = self.cpu()
         memory = p.virtual_memory().percent
@@ -48,7 +51,8 @@ class Servers(object):
             "flow_send": flow_send,
             "flow_recv": flow_recv,
             "instace_id": instace_id,
-            "total_flow": total_flow,
+            # "total_flow": total_flow,
+            "total_flow": 20000,
             "connected":connected,
             "already_flow": round(already_flow / 1024 / 1024 / 1024, 2)
 
@@ -140,6 +144,8 @@ class Servers(object):
         nodes_data = None
         instances_all = res.get("instances", None)
 
+        if not instances_all:
+            return None
         for instances in instances_all:
             main_ip = instances.get("main_ip", None)
             id = instances.get("id", None)
